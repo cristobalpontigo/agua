@@ -1,65 +1,122 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { AppProvider } from '@/context/AppContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { useAppContext } from '@/context/AppContext';
+import { SaleService } from '@/lib/services/sale.service';
+import { SimpleSaleForm } from '@/components/SimpleSaleForm';
+import { SimpleSalesList } from '@/components/SimpleSalesList';
+import { SimpleClientManager } from '@/components/SimpleClientManager';
+import { BillingReport } from '@/components/BillingReport';
+import { formatCurrency } from '@/lib/utils';
+
+type TabType = 'new' | 'list' | 'clients' | 'billing';
+
+function AppContent() {
+  const { sales, clients, payments } = useAppContext();
+  const [activeTab, setActiveTab] = useState<TabType>('new');
+
+  const totalAmount = sales.reduce((sum, s) => sum + SaleService.calculateTotal(s.items), 0);
+  const totalPaid = payments
+    .filter(p => p.status === 'completado')
+    .reduce((sum, p) => sum + p.amount, 0);
+  const pendingAmount = totalAmount - totalPaid;
+
+  const tabs: Array<{ id: TabType; label: string; icon: string }> = [
+    { id: 'new', label: 'Nueva Venta', icon: '➕' },
+    { id: 'list', label: 'Historial', icon: '📋' },
+    { id: 'clients', label: 'Clientes', icon: '👥' },
+    { id: 'billing', label: 'Facturación', icon: '💳' },
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-950">
+      {/* Header Simple */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">💧 AGUAS</h1>
+              <p className="text-sm text-slate-500 mt-1">Gestión de ventas</p>
+            </div>
+            <div className="flex gap-8">
+              <div className="text-right">
+                <p className="text-xs text-slate-500 uppercase">Ventas</p>
+                <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalAmount)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-500 uppercase">Pagado</p>
+                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalPaid)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-500 uppercase">Por Cobrar</p>
+                <p className="text-2xl font-bold text-amber-600">{formatCurrency(pendingAmount)}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* Tab Navigation - Simple */}
+        <div className="flex gap-4 border-b border-slate-700 mb-8">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-2 px-4 font-semibold transition-colors ${
+                activeTab === tab.id
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div>
+          {activeTab === 'new' && (
+            <div className="bg-white rounded-lg border border-slate-200 p-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Nueva Venta</h2>
+              <SimpleSaleForm clients={clients} onSaleCreated={() => setActiveTab('list')} />
+            </div>
+          )}
+
+          {activeTab === 'list' && (
+            <div className="bg-white rounded-lg border border-slate-200 p-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Historial de Ventas</h2>
+              <SimpleSalesList sales={sales} />
+            </div>
+          )}
+
+          {activeTab === 'clients' && (
+            <div className="bg-white rounded-lg border border-slate-200 p-6">
+              <SimpleClientManager />
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="bg-white rounded-lg border border-slate-200 p-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Facturación Mensual</h2>
+              <BillingReport sales={sales} clients={clients} />
+            </div>
+          )}
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AppProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </AppProvider>
   );
 }

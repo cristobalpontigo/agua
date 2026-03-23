@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String
+  role      String     @default("vendedor") // admin, vendedor
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  sales     Sale[]
+  payments  Payment[]
+}
+
+// Client Model
+model Client {
+  id                String     @id @default(cuid())
+  name              String     @unique
+  sector            String
+  phone             String?
+  email             String?
+  address           String?
+  billingDay        Int        @default(10) // Día de facturación mensual (1-31)
+  active            Boolean    @default(true)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  sales             Sale[]
+  payments          Payment[]
+  deliveries        Delivery[]
+}
+
+// Sale Model
+model Sale {
+  id          String     @id @default(cuid())
+  clientId    String
+  client      Client     @relation(fields: [clientId], references: [id])
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  
+  saleItems   SaleItem[]
+  total       Float
+  status      String     @default("pending") // pending, completed, cancelled
+  notes       String?
+  
+  createdAt   DateTime   @default(now())
+  completedAt DateTime?
+  
+  payments    Payment[]
+  delivery    Delivery?
+
+  @@index([clientId])
+  @@index([userId])
+}
+
+// Sale Item Model
+model SaleItem {
+  id        String   @id @default(cuid())
+  saleId    String
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  productId String
+  quantity  Int
+  price     Float
+  subtotal  Float
+
+  @@index([saleId])
+}
+
+// Payment Model
+model Payment {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  saleId    String?
+  sale      Sale?    @relation(fields: [saleId], references: [id])
+  
+  amount    Float
+  method    String   // cash, transfer, check
+  status    String   @default("pending") // pending, completed, failed
+  note      String?
+  
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+
+  @@index([clientId])
+  @@index([saleId])
+}
+
+// Delivery Model
+model Delivery {
+  id        String   @id @default(cuid())
+  saleId    String   @unique
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  
+  scheduledDate DateTime
+  completedAt DateTime?
+  status    String   @default("scheduled") // scheduled, in_transit, delivered, failed
+  notes     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}

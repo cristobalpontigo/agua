@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: Start development server",
+      "type": "shell",
+      "command": "$env:PATH = \"$env:USERPROFILE\\Downloads\\node-v24.11.1-win-x64;\" + $env:PATH; npm run dev",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true
+    },
+    {
+      "label": "build: Production build",
+      "type": "shell",
+      "command": "$env:PATH = \"$env:USERPROFILE\\Downloads\\node-v24.11.1-win-x64;\" + $env:PATH; npm run build",
+      "problemMatcher": []
+    },
+    {
+      "label": "lint: Run ESLint",
+      "type": "shell",
+      "command": "$env:PATH = \"$env:USERPROFILE\\Downloads\\node-v24.11.1-win-x64;\" + $env:PATH; npm run lint",
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
+    }
+  ]
+}
