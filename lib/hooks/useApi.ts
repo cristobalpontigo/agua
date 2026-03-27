@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { clientsApi, salesApi, paymentsApi, ApiResponse } from '@/lib/api-client';
 
 // Generic hook for API interactions
@@ -9,12 +9,17 @@ function useApi<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fetchFnRef = useRef(fetchFn);
+
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+  }, [fetchFn]);
 
   const refetch = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchFn();
+      const response = await fetchFnRef.current();
       if (response.error) {
         setError(response.error);
       } else {
@@ -25,7 +30,7 @@ function useApi<T>(
     } finally {
       setLoading(false);
     }
-  }, [fetchFn]);
+  }, []);
 
   useEffect(() => {
     if (immediate) {

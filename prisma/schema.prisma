@@ -29,6 +29,7 @@ model User {
 model Client {
   id                String     @id @default(cuid())
   name              String     @unique
+  contactName       String?
   sector            String
   phone             String?
   email             String?

@@ -37,7 +37,16 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status, notes, completedAt } = body;
+    const { status, notes, completedAt, delivery } = body;
+
+    const existingSale = await prisma.sale.findUnique({
+      where: { id },
+      select: { id: true, clientId: true },
+    });
+
+    if (!existingSale) {
+      return NextResponse.json({ error: 'Sale not found' }, { status: 404 });
+    }
 
     const sale = await prisma.sale.update({
       where: { id },
@@ -50,10 +59,58 @@ export async function PUT(
         client: true,
         saleItems: true,
         payments: true,
+        delivery: true,
       },
     });
 
-    return NextResponse.json(sale);
+    let updatedSale = sale;
+    if (delivery) {
+      const normalizedDeliveryStatus = delivery.status || 'scheduled';
+      const normalizedCompletedAt =
+        delivery.completedAt || normalizedDeliveryStatus === 'delivered'
+          ? new Date(delivery.completedAt || new Date())
+          : null;
+
+      await prisma.delivery.upsert({
+        where: { saleId: id },
+        update: {
+          ...(delivery.scheduledDate && { scheduledDate: new Date(delivery.scheduledDate) }),
+          ...(delivery.notes !== undefined && { notes: delivery.notes || null }),
+          ...(normalizedDeliveryStatus && { status: normalizedDeliveryStatus }),
+          ...(normalizedCompletedAt && { completedAt: normalizedCompletedAt }),
+        },
+        create: {
+          saleId: id,
+          clientId: existingSale.clientId,
+          scheduledDate: delivery.scheduledDate ? new Date(delivery.scheduledDate) : new Date(),
+          status: normalizedDeliveryStatus,
+          completedAt: normalizedCompletedAt,
+          notes: delivery.notes || null,
+        },
+      });
+
+      if (normalizedDeliveryStatus === 'delivered') {
+        await prisma.sale.update({
+          where: { id },
+          data: {
+            status: 'completed',
+            completedAt: normalizedCompletedAt || new Date(),
+          },
+        });
+      }
+
+      updatedSale = await prisma.sale.findUnique({
+        where: { id },
+        include: {
+          client: true,
+          saleItems: true,
+          payments: true,
+          delivery: true,
+        },
+      }) as typeof sale;
+    }
+
+    return NextResponse.json(updatedSale);
   } catch (error: any) {
     console.error('Error updating sale:', error);
     if (error.code === 'P2025') {

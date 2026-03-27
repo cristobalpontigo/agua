@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Sale, Client } from '@/lib/types';
+import { Client } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
-import { SaleService } from '@/lib/services/sale.service';
 
 interface SimpleSaleFormProps {
   clients: Client[];
@@ -14,6 +13,7 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [items, setItems] = useState<{ product: string; quantity: number; price: number }[]>([]);
   const [notes, setNotes] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const products = [
     { id: 'botellon_20', name: 'Botellón 20L', defaultPrice: 3500 },
@@ -32,25 +32,31 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
   };
 
   const handleSumbit = async () => {
+    setSubmitError(null);
+
+    if (clients.length === 0) {
+      setSubmitError('No hay clientes disponibles. Crea un cliente primero.');
+      return;
+    }
+
     if (!selectedClient || items.length === 0) {
-      alert('Selecciona un cliente y agrega productos');
+      setSubmitError('Selecciona un cliente y agrega productos.');
       return;
     }
 
     try {
+      const saleItems = items.map(item => ({
+        productId: item.product,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.quantity * item.price,
+      }));
+
       const saleData = {
         clientId: selectedClient,
-        items: items.map(item => {
-          const product = products.find(p => p.id === item.product);
-          return {
-            productId: item.product,
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.quantity * item.price,
-          };
-        }),
+        saleItems,
+        total,
         notes,
-        status: 'completada',
       };
 
       const res = await fetch('/api/sales', {
@@ -64,9 +70,13 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
         setItems([]);
         setNotes('');
         onSaleCreated?.();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        setSubmitError(errorData.error || 'No fue posible crear la venta.');
       }
     } catch (err) {
       console.error('Error creating sale:', err);
+      setSubmitError('Error de conexión al crear la venta.');
     }
   };
 
@@ -80,14 +90,21 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
         <select
           value={selectedClient}
           onChange={(e) => setSelectedClient(e.target.value)}
+          disabled={clients.length === 0}
           className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 focus:outline-none"
         >
-          <option value="">Selecciona un cliente...</option>
+          <option value="">{clients.length === 0 ? 'No hay clientes disponibles' : 'Selecciona un cliente...'}</option>
           {clients.map(client => (
             <option key={client.id} value={client.id}>{client.name}</option>
           ))}
         </select>
       </div>
+
+      {submitError && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {submitError}
+        </div>
+      )}
 
       {/* Productos */}
       <div>

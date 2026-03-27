@@ -38,12 +38,13 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, sector, phone, email, address, active } = body;
+    const { name, contactName, sector, phone, email, address, active } = body;
 
     const client = await prisma.client.update({
       where: { id },
       data: {
         ...(name && { name }),
+        ...(contactName !== undefined && { contactName }),
         ...(sector && { sector }),
         ...(phone !== undefined && { phone }),
         ...(email !== undefined && { email }),

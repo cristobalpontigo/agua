@@ -24,22 +24,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, sector, phone, email, address } = body;
+    const { name, contactName, sector, phone, email, address, billingDay } = body;
+    const normalizedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedContactName = typeof contactName === 'string' ? contactName.trim() : '';
+    const parsedBillingDay = Number.isInteger(billingDay) ? billingDay : 10;
 
-    if (!name || !sector) {
+    if (!normalizedName || !sector) {
       return NextResponse.json(
         { error: 'Name and sector are required' },
         { status: 400 }
       );
     }
 
+    if (parsedBillingDay < 1 || parsedBillingDay > 31) {
+      return NextResponse.json(
+        { error: 'Billing day must be between 1 and 31' },
+        { status: 400 }
+      );
+    }
+
     const client = await prisma.client.create({
       data: {
-        name,
+        name: normalizedName,
+        contactName: normalizedContactName || null,
         sector,
         phone: phone || null,
         email: email || null,
         address: address || null,
+        billingDay: parsedBillingDay,
       },
     });
 

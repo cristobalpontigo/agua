@@ -14,6 +14,7 @@ export interface Product {
 export interface Client {
   id: string;
   name: string;
+  contactName?: string;
   sector: SectorType;
   phone?: string;
   email?: string;
