@@ -1,9 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useClients } from '@/lib/hooks/useApi';
+import { PRODUCTS } from '@/lib/constants';
+import { ProductType } from '@/lib/types';
+import { SaleService } from '@/lib/services/sale.service';
+import { formatCurrency } from '@/lib/utils';
 
-export function SimpleClientManager() {
+type RecurringOrderConfig = {
+  productId: ProductType;
+  quantity: number;
+  frequency: 'semanal' | 'quincenal' | 'mensual';
+};
+
+interface SimpleClientManagerProps {
+  sales?: any[];
+}
+
+export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
   const { data, loading, error, refetch } = useClients();
   const clients = (data as any[]) || [];
   const [showForm, setShowForm] = useState(false);
@@ -16,6 +30,68 @@ export function SimpleClientManager() {
   const [editData, setEditData] = useState<Record<string, string>>({});
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [recurringOrders, setRecurringOrders] = useState<Record<string, RecurringOrderConfig>>({});
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('agua.recurringOrders');
+      if (stored) {
+        setRecurringOrders(JSON.parse(stored));
+      }
+    } catch {
+      setRecurringOrders({});
+    }
+  }, []);
+
+  const saveRecurringOrder = (clientId: string, nextConfig: RecurringOrderConfig) => {
+    const updated = { ...recurringOrders, [clientId]: nextConfig };
+    setRecurringOrders(updated);
+    localStorage.setItem('agua.recurringOrders', JSON.stringify(updated));
+    setSubmitSuccess('Pedido recurrente guardado.');
+  };
+
+  const generateRecurringSale = async (clientId: string) => {
+    const config = recurringOrders[clientId];
+    if (!config) {
+      setSubmitError('Primero guarda una configuración de pedido recurrente.');
+      return;
+    }
+
+    const product = PRODUCTS[config.productId];
+    const quantity = Math.max(1, Number(config.quantity || 1));
+    const subtotal = product.price * quantity;
+
+    try {
+      setSubmitError(null);
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          saleItems: [
+            {
+              productId: config.productId,
+              quantity,
+              price: product.price,
+              subtotal,
+            },
+          ],
+          total: subtotal,
+          notes: `Pedido recurrente (${config.frequency})`,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'No fue posible crear la venta recurrente');
+      }
+
+      setSubmitSuccess('Venta recurrente creada correctamente.');
+    } catch (err: any) {
+      setSubmitError(err.message || 'Error al crear venta recurrente');
+    }
+  };
 
   const startEdit = (client: any) => {
     setEditingId(client.id);
@@ -53,6 +129,46 @@ export function SimpleClientManager() {
     } finally {
       setIsSavingEdit(false);
     }
+  };
+
+  const deactivateClient = async (clientId: string) => {
+    setDeletingId(clientId);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'No se pudo desactivar el cliente');
+      }
+      await refetch();
+      setSubmitSuccess('Cliente desactivado correctamente.');
+    } catch (err: any) {
+      setSubmitError(err.message || 'Error al desactivar cliente');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const getPendingAmount = (clientId: string): number => {
+    return sales
+      .filter(s => s.clientId === clientId && s.status === 'pendiente')
+      .reduce((sum, s) => sum + SaleService.calculateTotal(s.items || s.saleItems || []), 0);
+  };
+
+  const openWhatsAppCobro = (client: any) => {
+    if (!client.phone) return;
+    let phone = client.phone.replace(/\D/g, '');
+    if (phone.startsWith('0')) phone = phone.slice(1);
+    if (!phone.startsWith('56')) phone = '56' + phone;
+    const debt = getPendingAmount(client.id);
+    const name = client.contactName || client.name;
+    const msg = debt > 0
+      ? `Hola ${name}, te escribimos de AGUAS. Tienes un saldo pendiente de $${debt.toLocaleString('es-CL')}. \u00bfPodemos coordinar el pago? Gracias.`
+      : `Hola ${name}, te escribimos de AGUAS. Quedamos al d\u00eda con los pagos. \u00a1Gracias por tu preferencia!`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
   };
   const [formData, setFormData] = useState({
     name: '',
@@ -318,13 +434,111 @@ export function SimpleClientManager() {
                 {client.email && <p className="text-sm text-slate-700 mb-1">✉️ {client.email}</p>}
                 {client.address && <p className="text-sm text-slate-700">📍 {client.address}</p>}
 
-                <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
-                  <p className="text-xs text-slate-600">Factura día {client.billingDay || 10} de cada mes</p>
+                <div className="mt-4 pt-3 border-t border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-xs text-slate-600">Factura día {client.billingDay || 10} de cada mes</p>
+                      <p className="text-[11px] text-slate-500">Historial: {client._count?.sales || 0} venta(s), {client._count?.payments || 0} pago(s)</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => startEdit(client)}
+                        className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => deactivateClient(client.id)}
+                        disabled={deletingId === client.id}
+                        className="px-2 py-1 text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition disabled:opacity-60"
+                      >
+                        {deletingId === client.id ? '...' : 'Desactivar'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Saldo pendiente + WhatsApp */}
+                  {(() => {
+                    const pending = getPendingAmount(client.id);
+                    return (
+                      <div className={`flex items-center justify-between rounded-lg px-3 py-2 mb-2 ${
+                        pending > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-emerald-50 border border-emerald-200'
+                      }`}>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo pendiente</p>
+                          <p className={`text-sm font-bold ${pending > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                            {pending > 0 ? formatCurrency(pending) : 'Al día ✓'}
+                          </p>
+                        </div>
+                        {client.phone && (
+                          <button
+                            onClick={() => openWhatsAppCobro(client)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[#25D366] text-white hover:bg-[#1ebe59] transition"
+                            title="Enviar mensaje de cobro por WhatsApp"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            Cobrar
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Pedido recurrente</p>
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <select
+                      value={recurringOrders[client.id]?.productId || 'botellon_20'}
+                      onChange={(e) =>
+                        saveRecurringOrder(client.id, {
+                          productId: e.target.value as ProductType,
+                          quantity: recurringOrders[client.id]?.quantity || 1,
+                          frequency: recurringOrders[client.id]?.frequency || 'semanal',
+                        })
+                      }
+                      className="px-2 py-1.5 text-xs border border-slate-300 rounded"
+                    >
+                      {Object.values(PRODUCTS).map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={1}
+                      value={recurringOrders[client.id]?.quantity || 1}
+                      onChange={(e) =>
+                        saveRecurringOrder(client.id, {
+                          productId: recurringOrders[client.id]?.productId || 'botellon_20',
+                          quantity: parseInt(e.target.value || '1'),
+                          frequency: recurringOrders[client.id]?.frequency || 'semanal',
+                        })
+                      }
+                      className="px-2 py-1.5 text-xs border border-slate-300 rounded"
+                      placeholder="Cantidad"
+                    />
+                    <select
+                      value={recurringOrders[client.id]?.frequency || 'semanal'}
+                      onChange={(e) =>
+                        saveRecurringOrder(client.id, {
+                          productId: recurringOrders[client.id]?.productId || 'botellon_20',
+                          quantity: recurringOrders[client.id]?.quantity || 1,
+                          frequency: e.target.value as RecurringOrderConfig['frequency'],
+                        })
+                      }
+                      className="px-2 py-1.5 text-xs border border-slate-300 rounded"
+                    >
+                      <option value="semanal">Semanal</option>
+                      <option value="quincenal">Quincenal</option>
+                      <option value="mensual">Mensual</option>
+                    </select>
+                  </div>
                   <button
-                    onClick={() => startEdit(client)}
-                    className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
+                    onClick={() => generateRecurringSale(client.id)}
+                    className="mt-2 w-full px-3 py-1.5 text-xs font-semibold rounded border border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100 transition"
                   >
-                    ✏️ Editar
+                    Generar venta recurrente ahora
                   </button>
                 </div>
               </>

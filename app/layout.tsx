@@ -16,6 +16,19 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Aguas | Gestión PYME",
   description: "Panel simple y visual para organizar ventas, clientes y cobranza.",
+  manifest: '/manifest.webmanifest',
+  applicationName: 'AGUAS',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AGUAS',
+  },
+  formatDetection: {
+    telephone: true,
+  },
+  icons: {
+    apple: '/apple-icon',
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
         className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}
       >

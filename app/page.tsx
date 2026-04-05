@@ -10,6 +10,7 @@ import { SimpleSalesList } from '@/components/SimpleSalesList';
 import { SimpleClientManager } from '@/components/SimpleClientManager';
 import { BillingReport } from '@/components/BillingReport';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
+import { MobileLoginGate } from '@/components/MobileLoginGate';
 import { useClients, useSales } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
 
@@ -47,6 +48,18 @@ function AppContent() {
   const pendingSales = availableSales.filter(sale => sale.status === 'pendiente').length;
   const monthLabel = new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
 
+  const todaySales = availableSales.filter(s => {
+    const d = new Date((s as any).createdAt);
+    const now = new Date();
+    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const todayAmount = todaySales.reduce((sum, s) => sum + SaleService.calculateTotal(s.items), 0);
+  const overduePending = availableSales.filter(s => {
+    if (s.status !== 'pendiente') return false;
+    const daysOld = (Date.now() - new Date((s as any).createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    return daysOld > 2;
+  });
+
   const tabs: Array<{ id: TabType; label: string; icon: string }> = [
     { id: 'new', label: 'Nueva venta', icon: '＋' },
     { id: 'list', label: 'Ventas', icon: '▦' },
@@ -83,24 +96,6 @@ function AppContent() {
       helper: 'Base actual',
       accent: 'from-slate-600/20 to-slate-200/0',
       border: 'border-slate-300/45',
-    },
-  ];
-
-  const focusItems = [
-    {
-      title: 'Cobros pendientes',
-      value: formatCurrency(pendingAmount),
-      hint: pendingAmount > 0 ? 'Prioridad del día' : 'Todo al día',
-    },
-    {
-      title: 'Ventas pendientes',
-      value: `${pendingSales}`,
-      hint: pendingSales > 0 ? 'Revisar estado y entrega' : 'Sin pendientes',
-    },
-    {
-      title: 'Clientes registrados',
-      value: `${availableClients.length}`,
-      hint: 'Mantén contactos actualizados',
     },
   ];
 
@@ -197,13 +192,13 @@ function AppContent() {
               {activeTab === 'list' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
                   <h3 className="mb-4 text-lg font-semibold text-slate-900">Seguimiento de ventas</h3>
-                  <SimpleSalesList sales={availableSales as any} />
+                  <SimpleSalesList sales={availableSales as any} onUpdated={refetchSales} />
                 </div>
               )}
 
               {activeTab === 'clients' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
-                  <SimpleClientManager />
+                  <SimpleClientManager sales={availableSales as any} />
                 </div>
               )}
 
@@ -224,21 +219,91 @@ function AppContent() {
           </div>
 
           <aside className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.5)] backdrop-blur-md sm:p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Prioridades del día</h2>
-            <p className="mt-1 text-sm text-slate-600">Resumen rápido para mantener orden y cobrar a tiempo.</p>
+            <h2 className="text-xl font-semibold text-slate-900">Vista del día</h2>
+            <p className="mt-1 text-sm text-slate-500 capitalize">
+              {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
 
-            <div className="mt-5 space-y-3">
-              {focusItems.map(item => (
-                <div key={item.title} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-sm font-medium text-slate-500">{item.title}</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">{item.value}</p>
-                  <p className="mt-1 text-sm text-slate-600">{item.hint}</p>
-                </div>
-              ))}
+            {/* Métricas del día */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-cyan-50 border border-cyan-200 p-3 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-cyan-600">Ventas hoy</p>
+                <p className="text-2xl font-bold text-cyan-900">{todaySales.length}</p>
+                <p className="text-[11px] text-cyan-700">{formatCurrency(todayAmount)}</p>
+              </div>
+              <div className={`rounded-xl p-3 text-center border ${
+                overduePending.length > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'
+              }`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wide ${
+                  overduePending.length > 0 ? 'text-rose-600' : 'text-emerald-600'
+                }`}>Vencidas</p>
+                <p className={`text-2xl font-bold ${
+                  overduePending.length > 0 ? 'text-rose-900' : 'text-emerald-900'
+                }`}>{overduePending.length}</p>
+                <p className={`text-[11px] ${
+                  overduePending.length > 0 ? 'text-rose-700' : 'text-emerald-700'
+                }`}>{overduePending.length > 0 ? 'Cobrar hoy' : '¡Al día!'}</p>
+              </div>
             </div>
 
-            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              Consejo: registra cada pago al momento y revisa ventas pendientes al cerrar el día.
+            {/* Por cobrar total */}
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">Por cobrar total</p>
+              <p className="text-2xl font-semibold text-amber-800">{formatCurrency(pendingAmount)}</p>
+              <p className="text-xs text-amber-600 mt-0.5">{pendingSales} venta(s) pendiente(s)</p>
+            </div>
+
+            {/* Clientes con deuda vencida */}
+            {overduePending.length > 0 && (
+              <div className="mt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Deuda vencida &gt;2 días</p>
+                <div className="space-y-1.5">
+                  {overduePending.slice(0, 4).map((sale: any) => (
+                    <div key={sale.id} className="flex items-center justify-between rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                      <div>
+                        <p className="text-xs font-semibold text-rose-900">{sale.clientName}</p>
+                        <p className="text-[11px] text-rose-600">{formatCurrency(SaleService.calculateTotal(sale.items))}</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('list')}
+                        className="text-[11px] text-rose-700 underline font-medium"
+                      >
+                        Ver
+                      </button>
+                    </div>
+                  ))}
+                  {overduePending.length > 4 && (
+                    <button onClick={() => setActiveTab('list')} className="text-xs text-slate-500 underline">
+                      +{overduePending.length - 4} más...
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Acciones rápidas */}
+            <div className="mt-4 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Acciones rápidas</p>
+              <button
+                onClick={() => setActiveTab('new')}
+                className="w-full rounded-xl border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100"
+              >
+                + Nueva venta
+              </button>
+              <button
+                onClick={() => setActiveTab('billing')}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+              >
+                Revisar cobros
+              </button>
+              {overduePending.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('list')}
+                  className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                >
+                  Ver {overduePending.length} venta(s) vencida(s)
+                </button>
+              )}
             </div>
           </aside>
         </section>
@@ -266,10 +331,12 @@ function AppContent() {
 
 export default function Home() {
   return (
-    <AppProvider>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
-    </AppProvider>
+    <MobileLoginGate>
+      <AppProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </AppProvider>
+    </MobileLoginGate>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sale, Client } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { SaleService } from '@/lib/services/sale.service';
@@ -13,6 +13,10 @@ interface BillingReportProps {
 export function BillingReport({ sales, clients }: BillingReportProps) {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>({});
+  const [savingInvoiceId, setSavingInvoiceId] = useState<string | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingSuccess, setBillingSuccess] = useState<string | null>(null);
 
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -60,6 +64,80 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
   const totalMonthly = billingData.reduce((sum, item) => sum + item.amount, 0);
   const totalClients = billingData.length;
 
+  const pendingByClient = clients
+    .map(client => {
+      const clientSales = sales.filter(s => s.clientId === client.id);
+      const totalSold = clientSales.reduce((sum, s) => sum + SaleService.calculateTotal(s.items), 0);
+      const totalPaid = (clientSales || []).reduce((sum, s) => {
+        const paid = (s.payments || [])
+          .filter((p: any) => p.status === 'completed' || p.status === 'completado')
+          .reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
+        return sum + paid;
+      }, 0);
+      const pending = Math.max(0, totalSold - totalPaid);
+      return {
+        clientId: client.id,
+        clientName: client.name,
+        pending,
+      };
+    })
+    .filter(item => item.pending > 0)
+    .sort((a, b) => b.pending - a.pending);
+
+  useEffect(() => {
+    const loadBillingRecords = async () => {
+      try {
+        setBillingError(null);
+        const response = await fetch(`/api/billing?year=${selectedYear}&month=${selectedMonth}`);
+        if (!response.ok) {
+          throw new Error('No se pudieron cargar los numeros de factura');
+        }
+
+        const records = await response.json();
+        const nextValues = (records as any[]).reduce((acc, record) => {
+          acc[record.clientId] = record.invoiceNumber || '';
+          return acc;
+        }, {} as Record<string, string>);
+
+        setInvoiceNumbers(nextValues);
+      } catch (error: any) {
+        setBillingError(error.message || 'Error al cargar facturas');
+      }
+    };
+
+    loadBillingRecords();
+  }, [selectedMonth, selectedYear]);
+
+  const saveInvoiceNumber = async (clientId: string) => {
+    try {
+      setSavingInvoiceId(clientId);
+      setBillingError(null);
+      setBillingSuccess(null);
+
+      const response = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          year: selectedYear,
+          month: selectedMonth,
+          invoiceNumber: invoiceNumbers[clientId] || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'No se pudo guardar el numero de factura');
+      }
+
+      setBillingSuccess('Numero de factura guardado.');
+    } catch (error: any) {
+      setBillingError(error.message || 'Error al guardar el numero de factura');
+    } finally {
+      setSavingInvoiceId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -91,6 +169,18 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
         </div>
       </div>
 
+      {billingError && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {billingError}
+        </div>
+      )}
+
+      {billingSuccess && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {billingSuccess}
+        </div>
+      )}
+
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -118,7 +208,7 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
                 key={item.clientId}
                 className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full font-bold text-white">
                       {item.billingDay}
@@ -133,6 +223,51 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
                     <p className="text-xs text-slate-500 mt-1">A facturar día {item.billingDay}</p>
                   </div>
                 </div>
+
+                <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-1">
+                      N. factura SSI
+                    </label>
+                    <input
+                      type="text"
+                      value={invoiceNumbers[item.clientId] || ''}
+                      onChange={(e) =>
+                        setInvoiceNumbers((prev) => ({
+                          ...prev,
+                          [item.clientId]: e.target.value,
+                        }))
+                      }
+                      placeholder="Ingresar numero manual"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={() => saveInvoiceNumber(item.clientId)}
+                    disabled={savingInvoiceId === item.clientId}
+                    className="self-end rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 disabled:opacity-60"
+                  >
+                    {savingInvoiceId === item.clientId ? 'Guardando...' : 'Guardar N.'}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Cobros pendientes por cliente</h3>
+        <div className="space-y-2">
+          {pendingByClient.length === 0 ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
+              No hay deudas pendientes.
+            </div>
+          ) : (
+            pendingByClient.map(item => (
+              <div key={item.clientId} className="flex items-center justify-between bg-rose-50 border border-rose-200 rounded-lg p-3">
+                <p className="font-semibold text-slate-900">{item.clientName}</p>
+                <p className="text-rose-700 font-bold">{formatCurrency(item.pending)}</p>
               </div>
             ))
           )}
