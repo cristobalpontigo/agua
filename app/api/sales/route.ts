@@ -54,12 +54,12 @@ export async function POST(request: NextRequest) {
     let resolvedUserId: string = userId;
     if (!resolvedUserId) {
       const fallbackUser = await prisma.user.upsert({
-        where: { email: 'sistema@aguas.local' },
+        where: { email: 'jramirez@aguas.local' },
         update: { active: true },
         create: {
-          email: 'sistema@aguas.local',
-          password: 'temporal',
-          name: 'Sistema',
+          email: 'jramirez@aguas.local',
+          password: '1234',
+          name: 'Juan Carlos Ramirez',
           role: 'admin',
           active: true,
         },

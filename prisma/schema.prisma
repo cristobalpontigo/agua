@@ -23,6 +23,7 @@ model User {
 
   sales     Sale[]
   payments  Payment[]
+  reminders Reminder[]
 }
 
 // Client Model
@@ -136,4 +137,22 @@ model BillingRecord {
   @@unique([clientId, year, month])
   @@index([year, month])
   @@index([clientId])
+}
+
+// Reminder Model
+model Reminder {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  title       String
+  description String?
+  dueDate     DateTime
+  completed   Boolean   @default(false)
+  notified    Boolean   @default(false)
+  priority    String    @default("normal") // low, normal, high
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([dueDate])
 }

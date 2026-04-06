@@ -11,20 +11,23 @@ import { SimpleClientManager } from '@/components/SimpleClientManager';
 import { BillingReport } from '@/components/BillingReport';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { MobileLoginGate } from '@/components/MobileLoginGate';
+import { RemindersPanel } from '@/components/RemindersPanel';
 import { useClients, useSales } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
 
-type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics';
+type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders';
 
 function AppContent() {
   const { sales, clients, payments, loading } = useAppContext();
-  const { data: apiClientsData } = useClients();
-  const { data: apiSalesData, refetch: refetchSales } = useSales();
+  const { data: apiClientsData, error: clientsError } = useClients();
+  const { data: apiSalesData, error: salesError, refetch: refetchSales } = useSales();
   const [activeTab, setActiveTab] = useState<TabType>('new');
 
-  const apiClients = (apiClientsData as any[]) || [];
-  const apiSalesRaw = (apiSalesData as any[]) || [];
-  const availableClients = apiClients.length > 0 ? apiClients : clients;
+  const hasApiClientsData = Array.isArray(apiClientsData);
+  const hasApiSalesData = Array.isArray(apiSalesData);
+  const apiClients = hasApiClientsData ? (apiClientsData as any[]) : [];
+  const apiSalesRaw = hasApiSalesData ? (apiSalesData as any[]) : [];
+  const availableClients = hasApiClientsData ? apiClients : clients;
   const normalizedApiSales = apiSalesRaw.map((sale: any) => ({
     ...sale,
     clientName: sale.clientName || sale.client?.name,
@@ -38,7 +41,7 @@ function AppContent() {
             ? 'cancelada'
             : sale.status,
   }));
-  const availableSales = normalizedApiSales.length > 0 ? normalizedApiSales : sales;
+  const availableSales = hasApiSalesData ? normalizedApiSales : sales;
 
   const totalAmount = availableSales.reduce((sum, s) => sum + SaleService.calculateTotal(s.items), 0);
   const totalPaid = payments
@@ -66,6 +69,7 @@ function AppContent() {
     { id: 'logistics', label: 'Logística', icon: '↗' },
     { id: 'clients', label: 'Clientes', icon: '◉' },
     { id: 'billing', label: 'Facturación', icon: '¤' },
+    { id: 'reminders', label: 'Recordatorios', icon: '🔔' },
   ];
 
   const metrics = [
@@ -176,6 +180,13 @@ function AppContent() {
             </div>
 
             <div>
+              {(salesError || clientsError) && (
+                <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                  {salesError && <p>Error al cargar ventas: {salesError}</p>}
+                  {clientsError && <p>Error al cargar clientes: {clientsError}</p>}
+                </div>
+              )}
+
               {activeTab === 'new' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
                   <h3 className="mb-4 text-lg font-semibold text-slate-900">Registrar venta rápida</h3>
@@ -213,6 +224,12 @@ function AppContent() {
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
                   <h3 className="mb-4 text-lg font-semibold text-slate-900">Cobranza y facturación</h3>
                   <BillingReport sales={availableSales as any} clients={availableClients as any} />
+                </div>
+              )}
+
+              {activeTab === 'reminders' && (
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                  <RemindersPanel />
                 </div>
               )}
             </div>

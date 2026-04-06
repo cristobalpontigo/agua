@@ -21,6 +21,11 @@ async function apiCall<T>(
       },
     };
 
+    if (method === 'GET') {
+      // Avoid stale UI data after create/update operations.
+      options.cache = 'no-store';
+    }
+
     if (body) {
       options.body = JSON.stringify(body);
     }
