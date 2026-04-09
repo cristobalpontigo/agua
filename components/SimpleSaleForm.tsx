@@ -1,8 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Client } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+
+interface ApiProduct {
+  id: string;
+  code: string;
+  name: string;
+  price: number;
+}
 
 interface SimpleSaleFormProps {
   clients: Client[];
@@ -14,17 +21,39 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
   const [items, setItems] = useState<{ product: string; quantity: number; price: number }[]>([]);
   const [notes, setNotes] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [products, setProducts] = useState<{ id: string; name: string; defaultPrice: number }[]>([]);
 
-  const products = [
-    { id: 'botellon_20', name: 'Botellón 20L', defaultPrice: 3500 },
-    { id: 'bidon_10', name: 'Bidón 10L', defaultPrice: 2000 },
-    { id: 'bidon_6', name: 'Bidón 6L', defaultPrice: 1500 },
-    { id: 'agua_soda_2', name: 'Agua/Soda 2L', defaultPrice: 800 },
-    { id: 'hielo_kilo', name: 'Hielo Kg', defaultPrice: 500 },
-  ];
+  useEffect(() => {
+    fetch('/api/products', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: ApiProduct[]) => {
+        if (data.length > 0) {
+          setProducts(data.map(p => ({ id: p.code, name: p.name, defaultPrice: p.price })));
+        } else {
+          // Fallback if no products in DB yet
+          setProducts([
+            { id: 'botellon_20', name: 'Botellón 20L', defaultPrice: 3500 },
+            { id: 'bidon_10', name: 'Bidón 10L', defaultPrice: 2000 },
+            { id: 'bidon_6', name: 'Bidón 6L', defaultPrice: 1500 },
+            { id: 'agua_soda_2', name: 'Agua/Soda 2L', defaultPrice: 800 },
+            { id: 'hielo_kilo', name: 'Hielo Kg', defaultPrice: 500 },
+          ]);
+        }
+      })
+      .catch(() => {
+        setProducts([
+          { id: 'botellon_20', name: 'Botellón 20L', defaultPrice: 3500 },
+          { id: 'bidon_10', name: 'Bidón 10L', defaultPrice: 2000 },
+          { id: 'bidon_6', name: 'Bidón 6L', defaultPrice: 1500 },
+          { id: 'agua_soda_2', name: 'Agua/Soda 2L', defaultPrice: 800 },
+          { id: 'hielo_kilo', name: 'Hielo Kg', defaultPrice: 500 },
+        ]);
+      });
+  }, []);
 
   const handleAddItem = () => {
-    setItems([...items, { product: 'botellon_20', quantity: 1, price: 3500 }]);
+    const first = products[0];
+    setItems([...items, { product: first?.id || 'botellon_20', quantity: 1, price: first?.defaultPrice || 3500 }]);
   };
 
   const handleRemoveItem = (index: number) => {

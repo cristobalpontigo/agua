@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useClients } from '@/lib/hooks/useApi';
-import { PRODUCTS } from '@/lib/constants';
-import { ProductType } from '@/lib/types';
 import { SaleService } from '@/lib/services/sale.service';
 import { formatCurrency } from '@/lib/utils';
 
+interface ApiProduct {
+  id: string;
+  code: string;
+  name: string;
+  price: number;
+}
+
 type RecurringOrderConfig = {
-  productId: ProductType;
+  productId: string;
   quantity: number;
   frequency: 'semanal' | 'quincenal' | 'mensual';
 };
@@ -32,6 +37,14 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
   const [editError, setEditError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [recurringOrders, setRecurringOrders] = useState<Record<string, RecurringOrderConfig>>({});
+  const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
+
+  useEffect(() => {
+    fetch('/api/products', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: ApiProduct[]) => setApiProducts(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -58,9 +71,9 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
       return;
     }
 
-    const product = PRODUCTS[config.productId];
+    const product = apiProducts.find(p => p.code === config.productId);
     const quantity = Math.max(1, Number(config.quantity || 1));
-    const subtotal = product.price * quantity;
+    const subtotal = (product?.price || 0) * quantity;
 
     try {
       setSubmitError(null);
@@ -73,7 +86,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
             {
               productId: config.productId,
               quantity,
-              price: product.price,
+              price: product?.price || 0,
               subtotal,
             },
           ],
@@ -487,18 +500,18 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
                     <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Pedido recurrente</p>
                     <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                       <select
-                        value={recurringOrders[client.id]?.productId || 'botellon_20'}
+                        value={recurringOrders[client.id]?.productId || (apiProducts[0]?.code || 'botellon_20')}
                         onChange={(e) =>
                           saveRecurringOrder(client.id, {
-                            productId: e.target.value as ProductType,
+                            productId: e.target.value,
                             quantity: recurringOrders[client.id]?.quantity || 1,
                             frequency: recurringOrders[client.id]?.frequency || 'semanal',
                           })
                         }
                         className="px-2 py-1.5 text-xs border border-slate-300 rounded"
                       >
-                        {Object.values(PRODUCTS).map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
+                        {apiProducts.map((p) => (
+                          <option key={p.code} value={p.code}>{p.name}</option>
                         ))}
                       </select>
                       <input
@@ -507,7 +520,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
                         value={recurringOrders[client.id]?.quantity || 1}
                         onChange={(e) =>
                           saveRecurringOrder(client.id, {
-                            productId: recurringOrders[client.id]?.productId || 'botellon_20',
+                            productId: recurringOrders[client.id]?.productId || (apiProducts[0]?.code || 'botellon_20'),
                             quantity: parseInt(e.target.value || '1'),
                             frequency: recurringOrders[client.id]?.frequency || 'semanal',
                           })
@@ -519,7 +532,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
                         value={recurringOrders[client.id]?.frequency || 'semanal'}
                         onChange={(e) =>
                           saveRecurringOrder(client.id, {
-                            productId: recurringOrders[client.id]?.productId || 'botellon_20',
+                            productId: recurringOrders[client.id]?.productId || (apiProducts[0]?.code || 'botellon_20'),
                             quantity: recurringOrders[client.id]?.quantity || 1,
                             frequency: e.target.value as RecurringOrderConfig['frequency'],
                           })

@@ -12,10 +12,12 @@ import { BillingReport } from '@/components/BillingReport';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { MobileLoginGate } from '@/components/MobileLoginGate';
 import { RemindersPanel } from '@/components/RemindersPanel';
+import { ProductsManager } from '@/components/ProductsManager';
+import { DangerZone } from '@/components/DangerZone';
 import { useClients, useSales } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
 
-type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders';
+type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders' | 'products';
 
 function AppContent() {
   const { sales, clients, payments, loading } = useAppContext();
@@ -70,6 +72,7 @@ function AppContent() {
     { id: 'clients', label: 'Clientes', icon: '◉' },
     { id: 'billing', label: 'Facturación', icon: '¤' },
     { id: 'reminders', label: 'Recordatorios', icon: '🔔' },
+    { id: 'products', label: 'Productos', icon: '📦' },
   ];
 
   const metrics = [
@@ -232,6 +235,12 @@ function AppContent() {
                   <RemindersPanel />
                 </div>
               )}
+
+              {activeTab === 'products' && (
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                  <ProductsManager />
+                </div>
+              )}
             </div>
           </div>
 
@@ -322,6 +331,8 @@ function AppContent() {
                 </button>
               )}
             </div>
+
+            <DangerZone />
           </aside>
         </section>
 
