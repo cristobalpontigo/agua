@@ -261,17 +261,17 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
   return (
     <div className="space-y-6">
       {/* Header con botón */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-900">Gestión de Clientes</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg sm:text-2xl font-bold text-slate-900">Gestión de Clientes</h2>
         <button
           onClick={() => {
             setSubmitError(null);
             setSubmitSuccess(null);
             setShowForm(!showForm);
           }}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+          className="px-4 py-2.5 bg-blue-600 active:bg-blue-700 text-white font-semibold rounded-lg transition text-sm whitespace-nowrap"
         >
-          {showForm ? '✕ Cancelar' : '+ Nuevo Cliente'}
+          {showForm ? '✕ Cancelar' : '+ Nuevo'}
         </button>
       </div>
 
@@ -289,8 +289,8 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
 
       {/* Formulario */}
       {showForm && (
-        <div className="bg-slate-100 border border-slate-300 rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-slate-100 border border-slate-300 rounded-lg p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Nombre del cliente"
@@ -372,16 +372,16 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
       )}
 
       {/* Lista de clientes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {clients.map((client) => (
           <div
             key={client.id}
             className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition"
           >
             <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-bold text-slate-900 text-lg">{client.name}</h3>
-                <p className="text-sm text-slate-600">{sectorNames[client.sector as keyof typeof sectorNames]}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-slate-900 text-base sm:text-lg truncate">{client.name}</h3>
+                <p className="text-xs sm:text-sm text-slate-600">{sectorNames[client.sector as keyof typeof sectorNames]}</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold text-white text-sm">

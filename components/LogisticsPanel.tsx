@@ -348,34 +348,34 @@ export function LogisticsPanel({ sales, onUpdated }: LogisticsPanelProps) {
     const cardClasses = getCardPriorityClasses(status, sale.scheduled, startToday, endToday);
 
     return (
-      <article key={sale.id} className={`rounded-xl border p-4 ${cardClasses}`}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h4 className="text-lg font-semibold text-slate-900">{sale.clientLabel}</h4>
-            <p className="text-sm text-slate-500">
-              Venta {new Date(sale.createdAt).toLocaleDateString('es-CL')} · {sale.items.length} item(s)
+      <article key={sale.id} className={`rounded-xl border p-3 sm:p-4 ${cardClasses}`}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h4 className="text-base sm:text-lg font-semibold text-slate-900 truncate">{sale.clientLabel}</h4>
+            <p className="text-xs sm:text-sm text-slate-500">
+              {new Date(sale.createdAt).toLocaleDateString('es-CL')} · {sale.items.length} item(s)
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xl font-semibold text-emerald-700">{formatCurrency(sale.total)}</p>
-            <span className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getDeliveryStatusClasses(status)}`}>
+          <div className="text-right flex-shrink-0">
+            <p className="text-lg sm:text-xl font-semibold text-emerald-700">{formatCurrency(sale.total)}</p>
+            <span className={`mt-1 inline-flex rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold ${getDeliveryStatusClasses(status)}`}>
               {getDeliveryStatusLabel(status)}
             </span>
           </div>
         </div>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Fecha programada</p>
-            <p className="mt-1 text-sm font-medium text-slate-900">{scheduledDate}</p>
+        <div className="mt-3 grid gap-2 grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.1em] text-slate-500">Programada</p>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-900">{scheduledDate}</p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Fecha entrega real</p>
-            <p className="mt-1 text-sm font-medium text-slate-900">{deliveredAt || 'Sin confirmar'}</p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.1em] text-slate-500">Entregada</p>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-900">{deliveredAt || 'Sin confirmar'}</p>
           </div>
         </div>
 
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3 text-xs sm:text-sm text-slate-700">
           <p>
             <span className="font-semibold">Contacto:</span> {sale.client?.contactName || sale.client?.name || 'Sin contacto'}
           </p>
@@ -388,7 +388,7 @@ export function LogisticsPanel({ sales, onUpdated }: LogisticsPanelProps) {
           <div className="mt-2">
             <button
               onClick={() => openWhatsApp(sale.client?.phone)}
-              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100"
+              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition active:bg-emerald-100"
             >
               WhatsApp cliente
             </button>
@@ -396,52 +396,52 @@ export function LogisticsPanel({ sales, onUpdated }: LogisticsPanelProps) {
         </div>
 
         {!driverMode && (
-          <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+          <div className="mt-3 grid gap-2 grid-cols-2 sm:grid-cols-[1fr_auto_auto_auto]">
             <input
               type="date"
               value={draftValue}
               onChange={(e) => setDateDrafts((prev) => ({ ...prev, [sale.id]: e.target.value }))}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+              className="col-span-2 sm:col-span-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800"
             />
             <button
               onClick={() => saveSchedule(sale.id)}
               disabled={isBusy}
-              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 disabled:opacity-60"
+              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs sm:text-sm font-semibold text-blue-700 disabled:opacity-60 active:bg-blue-100"
             >
               Programar
             </button>
             <button
               onClick={() => markStatus(sale.id, 'in_transit')}
               disabled={isBusy}
-              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 disabled:opacity-60"
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs sm:text-sm font-semibold text-amber-700 disabled:opacity-60 active:bg-amber-100"
             >
               Despachada
             </button>
             <button
               onClick={() => markStatus(sale.id, 'delivered')}
               disabled={isBusy}
-              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 disabled:opacity-60"
+              className="col-span-2 sm:col-span-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs sm:text-sm font-semibold text-emerald-700 disabled:opacity-60 active:bg-emerald-100"
             >
-              Entregada
+              ✓ Entregada
             </button>
           </div>
         )}
 
         {driverMode && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <button
               onClick={() => markStatus(sale.id, 'delivered')}
               disabled={isBusy}
-              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800 disabled:opacity-60"
+              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-3.5 text-sm font-semibold text-emerald-800 disabled:opacity-60 active:bg-emerald-100"
             >
-              Entregada
+              ✓ Entregada
             </button>
             <button
               onClick={() => markStatus(sale.id, 'failed')}
               disabled={isBusy}
-              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-800 disabled:opacity-60"
+              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-3.5 text-sm font-semibold text-rose-800 disabled:opacity-60 active:bg-rose-100"
             >
-              No entregada
+              ✗ No entregada
             </button>
           </div>
         )}
@@ -487,57 +487,59 @@ export function LogisticsPanel({ sales, onUpdated }: LogisticsPanelProps) {
   return (
     <div className="space-y-4">
       {!driverMode && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Entregas de hoy</p>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{todayCount}</p>
+        <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.12em] text-slate-500">Hoy</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-semibold text-slate-900">{todayCount}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Pendientes logisticos</p>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{pendingCount}</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.12em] text-slate-500">Pendientes</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-semibold text-slate-900">{pendingCount}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Atrasadas</p>
-            <p className="mt-1 text-3xl font-semibold text-rose-700">{overdueCount}</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.12em] text-slate-500">Atrasadas</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-semibold text-rose-700">{overdueCount}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-3">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Cumplimiento a tiempo</p>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{onTimeRate}%</p>
-            <p className="text-xs text-slate-500">{onTimeDeliveredCount} de {deliveredSales.length} entregas completadas</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4 col-span-2 sm:col-span-3">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.12em] text-slate-500">Cumplimiento a tiempo</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-semibold text-slate-900">{onTimeRate}%</p>
+            <p className="text-xs text-slate-500">{onTimeDeliveredCount} de {deliveredSales.length} entregas</p>
           </div>
         </div>
       )}
 
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto]">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar por cliente, contacto, telefono, direccion o sector"
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+          placeholder="Buscar cliente, contacto, dirección..."
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800"
         />
-        <button
-          onClick={() => setGroupBySector((prev) => !prev)}
-          className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-            groupBySector ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-300 bg-white text-slate-700'
-          }`}
-        >
-          {groupBySector ? 'Agrupado por sector' : 'Agrupar por sector'}
-        </button>
-        <button
-          onClick={() => setDriverMode((prev) => !prev)}
-          className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-            driverMode ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-700'
-          }`}
-        >
-          {driverMode ? 'Modo completo' : 'Modo conductor'}
-        </button>
-        <button
-          onClick={printTodayRoute}
-          className="rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800"
-        >
-          Imprimir hoja de ruta
-        </button>
+        <div className="grid grid-cols-3 gap-2 sm:contents">
+          <button
+            onClick={() => setGroupBySector((prev) => !prev)}
+            className={`rounded-lg border px-3 py-2.5 text-xs sm:text-sm font-semibold transition ${
+              groupBySector ? 'border-sky-300 bg-sky-50 text-sky-800' : 'border-slate-300 bg-white text-slate-700'
+            }`}
+          >
+            {groupBySector ? 'Agrupado' : 'Agrupar'}
+          </button>
+          <button
+            onClick={() => setDriverMode((prev) => !prev)}
+            className={`rounded-lg border px-3 py-2.5 text-xs sm:text-sm font-semibold transition ${
+              driverMode ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-700'
+            }`}
+          >
+            {driverMode ? 'Completo' : 'Conductor'}
+          </button>
+          <button
+            onClick={printTodayRoute}
+            className="rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-2.5 text-xs sm:text-sm font-semibold text-indigo-800"
+          >
+            Imprimir
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">

@@ -160,15 +160,15 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
         <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Año</label>
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1 sm:mb-2">Año</label>
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 focus:outline-none"
+            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
           >
             {[2024, 2025, 2026, 2027].map(year => (
               <option key={year} value={year}>{year}</option>
@@ -177,11 +177,11 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Mes</label>
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1 sm:mb-2">Mes</label>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-            className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 focus:outline-none"
+            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
           >
             {monthNames.map((name, idx) => (
               <option key={idx + 1} value={idx + 1}>{name}</option>
@@ -189,12 +189,12 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Cliente</label>
+        <div className="col-span-2 sm:col-span-1">
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1 sm:mb-2">Cliente</label>
           <select
             value={selectedClientId}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 focus:outline-none"
+            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
           >
             <option value="all">Todos los clientes</option>
             {clients
@@ -220,21 +220,21 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
       )}
 
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <p className="text-sm text-blue-700 font-semibold">Total {monthNames[selectedMonth - 1]} {selectedYear}</p>
-          <p className="text-3xl font-bold mt-2 text-blue-900">{formatCurrency(totalMonthly)}</p>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-6">
+          <p className="text-[10px] sm:text-sm text-blue-700 font-semibold">Total mes</p>
+          <p className="text-lg sm:text-3xl font-bold mt-1 sm:mt-2 text-blue-900">{formatCurrency(totalMonthly)}</p>
         </div>
 
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
-          <p className="text-sm text-emerald-700 font-semibold">Clientes con ventas</p>
-          <p className="text-3xl font-bold mt-2 text-emerald-900">{totalClients}</p>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 sm:p-6">
+          <p className="text-[10px] sm:text-sm text-emerald-700 font-semibold">Clientes</p>
+          <p className="text-lg sm:text-3xl font-bold mt-1 sm:mt-2 text-emerald-900">{totalClients}</p>
         </div>
 
-        <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-6">
-          <p className="text-sm text-cyan-700 font-semibold">Total ventas</p>
-          <p className="text-3xl font-bold mt-2 text-cyan-900">{billingData.reduce((s, b) => s + b.sales.length, 0)}</p>
-          <p className="text-xs text-cyan-600 mt-1">{billingData.reduce((s, b) => s + b.productBreakdown.reduce((a, p) => a + p.quantity, 0), 0)} unidades vendidas</p>
+        <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 sm:p-6">
+          <p className="text-[10px] sm:text-sm text-cyan-700 font-semibold">Ventas</p>
+          <p className="text-lg sm:text-3xl font-bold mt-1 sm:mt-2 text-cyan-900">{billingData.reduce((s, b) => s + b.sales.length, 0)}</p>
+          <p className="text-[10px] sm:text-xs text-cyan-600 mt-0.5 sm:mt-1">{billingData.reduce((s, b) => s + b.productBreakdown.reduce((a, p) => a + p.quantity, 0), 0)} uds</p>
         </div>
       </div>
 
@@ -250,41 +250,40 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
             billingData.map((item, idx) => (
               <div
                 key={item.clientId}
-                className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition"
+                className="bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full font-bold text-white">
+                <div className="flex items-center justify-between gap-2 sm:gap-4">
+                  <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full font-bold text-white text-xs sm:text-base shrink-0">
                       {item.billingDay}
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-900">{item.clientName}</h4>
-                      <p className="text-sm text-slate-500">{item.sales.length} venta(s)</p>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base truncate">{item.clientName}</h4>
+                      <p className="text-xs sm:text-sm text-slate-500">{item.sales.length} venta(s)</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-emerald-600">{formatCurrency(item.amount)}</p>
-                    <p className="text-xs text-slate-500 mt-1">A facturar día {item.billingDay}</p>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg sm:text-2xl font-bold text-emerald-600">{formatCurrency(item.amount)}</p>
                   </div>
                 </div>
 
                 {/* Product breakdown */}
                 {item.productBreakdown.length > 0 && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="mt-2 sm:mt-3 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                    <table className="w-full text-xs sm:text-sm">
                       <thead>
                         <tr className="bg-slate-100 text-left">
-                          <th className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Producto</th>
-                          <th className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">Cant.</th>
-                          <th className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-right">Monto</th>
+                          <th className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500">Producto</th>
+                          <th className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">Cant.</th>
+                          <th className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 text-right">Monto</th>
                         </tr>
                       </thead>
                       <tbody>
                         {item.productBreakdown.map((pb) => (
                           <tr key={pb.productId} className="border-t border-slate-100">
-                            <td className="px-3 py-1.5 text-slate-700">{pb.productId}</td>
-                            <td className="px-3 py-1.5 text-slate-900 font-semibold text-center">{pb.quantity}</td>
-                            <td className="px-3 py-1.5 text-emerald-700 font-semibold text-right">{formatCurrency(pb.subtotal)}</td>
+                            <td className="px-2 sm:px-3 py-1 sm:py-1.5 text-slate-700 truncate max-w-[120px]">{pb.productId}</td>
+                            <td className="px-2 sm:px-3 py-1 sm:py-1.5 text-slate-900 font-semibold text-center">{pb.quantity}</td>
+                            <td className="px-2 sm:px-3 py-1 sm:py-1.5 text-emerald-700 font-semibold text-right">{formatCurrency(pb.subtotal)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -292,31 +291,33 @@ export function BillingReport({ sales, clients }: BillingReportProps) {
                   </div>
                 )}
 
-                <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto]">
+                <div className="mt-3 grid gap-2">
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-1">
+                    <label className="block text-[10px] sm:text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-1">
                       N. factura SSI
                     </label>
-                    <input
-                      type="text"
-                      value={invoiceNumbers[item.clientId] || ''}
-                      onChange={(e) =>
-                        setInvoiceNumbers((prev) => ({
-                          ...prev,
-                          [item.clientId]: e.target.value,
-                        }))
-                      }
-                      placeholder="Ingresar numero manual"
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={invoiceNumbers[item.clientId] || ''}
+                        onChange={(e) =>
+                          setInvoiceNumbers((prev) => ({
+                            ...prev,
+                            [item.clientId]: e.target.value,
+                          }))
+                        }
+                        placeholder="N° factura"
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                      />
+                      <button
+                        onClick={() => saveInvoiceNumber(item.clientId)}
+                        disabled={savingInvoiceId === item.clientId}
+                        className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 disabled:opacity-60 shrink-0 active:bg-blue-100"
+                      >
+                        {savingInvoiceId === item.clientId ? '...' : 'Guardar'}
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => saveInvoiceNumber(item.clientId)}
-                    disabled={savingInvoiceId === item.clientId}
-                    className="self-end rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 disabled:opacity-60"
-                  >
-                    {savingInvoiceId === item.clientId ? 'Guardando...' : 'Guardar N.'}
-                  </button>
                 </div>
               </div>
             ))

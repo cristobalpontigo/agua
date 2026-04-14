@@ -147,44 +147,63 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {items.map((item, idx) => (
-            <div key={idx} className="flex gap-2 items-center">
-              <select
-                value={item.product}
-                onChange={(e) => {
-                  const newItems = [...items];
-                  const product = products.find(p => p.id === e.target.value);
-                  newItems[idx] = { ...item, product: e.target.value, price: product?.defaultPrice || 0 };
-                  setItems(newItems);
-                }}
-                className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded text-slate-900 text-sm"
-              >
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) => {
-                  const newItems = [...items];
-                  newItems[idx] = { ...item, quantity: parseInt(e.target.value) || 1 };
-                  setItems(newItems);
-                }}
-                className="w-16 px-2 py-2 bg-white border border-slate-300 rounded text-slate-900 text-sm text-center"
-              />
-
-              <span className="text-slate-700 text-sm min-w-[80px] text-right">{formatCurrency(item.quantity * item.price)}</span>
-
-              <button
-                onClick={() => handleRemoveItem(idx)}
-                className="px-2 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
-              >
-                ✕
-              </button>
+            <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 space-y-2">
+              <div className="flex gap-2 items-center">
+                <select
+                  value={item.product}
+                  onChange={(e) => {
+                    const newItems = [...items];
+                    const product = products.find(p => p.id === e.target.value);
+                    newItems[idx] = { ...item, product: e.target.value, price: product?.defaultPrice || 0 };
+                    setItems(newItems);
+                  }}
+                  className="flex-1 px-2 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
+                >
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleRemoveItem(idx)}
+                  className="px-2.5 py-2.5 bg-red-600 active:bg-red-700 text-white rounded-lg text-sm shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const newItems = [...items];
+                      newItems[idx] = { ...item, quantity: Math.max(1, item.quantity - 1) };
+                      setItems(newItems);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded-lg text-slate-700 font-bold text-lg active:bg-slate-300"
+                  >−</button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const newItems = [...items];
+                      newItems[idx] = { ...item, quantity: parseInt(e.target.value) || 1 };
+                      setItems(newItems);
+                    }}
+                    className="w-14 px-1 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm text-center"
+                  />
+                  <button
+                    onClick={() => {
+                      const newItems = [...items];
+                      newItems[idx] = { ...item, quantity: item.quantity + 1 };
+                      setItems(newItems);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded-lg text-slate-700 font-bold text-lg active:bg-slate-300"
+                  >+</button>
+                </div>
+                <span className="ml-auto text-base font-bold text-emerald-700">{formatCurrency(item.quantity * item.price)}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -223,7 +242,7 @@ export function SimpleSaleForm({ clients, onSaleCreated }: SimpleSaleFormProps) 
       <button
         onClick={handleSumbit}
         disabled={!selectedClient || items.length === 0}
-        className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
+        className="w-full px-4 py-4 bg-blue-600 active:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl text-base transition active:scale-[0.98]"
       >
         Guardar Venta
       </button>

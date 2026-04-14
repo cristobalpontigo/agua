@@ -107,79 +107,80 @@ function AppContent() {
   ];
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative overflow-x-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-cyan-300/35 blur-3xl" />
-        <div className="absolute top-52 -right-20 h-96 w-96 rounded-full bg-sky-200/45 blur-3xl" />
+        <div className="absolute -top-32 left-0 h-80 w-80 rounded-full bg-cyan-300/35 blur-3xl" />
+        <div className="absolute top-52 right-0 h-96 w-96 rounded-full bg-sky-200/45 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-amber-200/35 blur-3xl" />
       </div>
 
       <header className="sticky top-0 z-40 border-b border-white/60 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Panel diario</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">AGUAS Gestión PYME</h1>
-              <p className="mt-1 text-sm text-slate-600">Control simple de ventas, clientes y cobranza para {monthLabel}</p>
+        <div className="mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 truncate">AGUAS Gestión</h1>
+              <p className="text-xs text-slate-500 truncate">{monthLabel}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:text-right">
+            <div className="flex gap-2 shrink-0">
               <button
                 onClick={() => setActiveTab('new')}
-                className="rounded-xl border border-cyan-300/70 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:-translate-y-0.5 hover:bg-cyan-100"
+                className="rounded-xl border border-cyan-300/70 bg-cyan-50 px-3 py-2 text-xs sm:text-sm font-semibold text-cyan-800 transition active:scale-95"
               >
-                Nueva venta
+                + Venta
               </button>
               <button
                 onClick={() => setActiveTab('billing')}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300"
+                className="hidden sm:block rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition active:scale-95"
               >
-                Revisar cobros
+                Cobros
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pb-10">
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <main className="relative z-10 mx-auto max-w-6xl px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 overflow-hidden">
+        <section className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           {metrics.map(metric => (
             <article
               key={metric.label}
-              className={`rounded-2xl border ${metric.border} bg-white/85 p-4 shadow-[0_12px_36px_-20px_rgba(15,23,42,0.45)] backdrop-blur-md`}
+              className={`rounded-2xl border ${metric.border} bg-white/85 p-3 sm:p-4 shadow-[0_12px_36px_-20px_rgba(15,23,42,0.45)] backdrop-blur-md`}
             >
-              <div className={`mb-3 h-2 w-24 rounded-full bg-gradient-to-r ${metric.accent}`} />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{metric.label}</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">{metric.value}</p>
-              <p className="mt-1 text-sm text-slate-500">{metric.helper}</p>
+              <div className={`mb-2 sm:mb-3 h-1.5 sm:h-2 w-16 sm:w-24 rounded-full bg-gradient-to-r ${metric.accent}`} />
+              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{metric.label}</p>
+              <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-semibold text-slate-900">{metric.value}</p>
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 truncate">{metric.helper}</p>
             </article>
           ))}
         </section>
 
-        <section className="mt-6 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-          <div className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.5)] backdrop-blur-md sm:p-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold text-slate-900">Flujo principal</h2>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+        <section className="mt-4 sm:mt-6 flex flex-col lg:grid lg:grid-cols-[1.3fr_1fr] gap-4">
+          <div className="rounded-2xl border border-white/60 bg-white/85 p-3 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.5)] backdrop-blur-md sm:p-6 min-w-0 overflow-hidden">
+            <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Flujo principal</h2>
+              <span className="hidden sm:inline rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
                 {loading ? 'Cargando datos...' : 'Listo para operar'}
               </span>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-2 rounded-xl border border-slate-200/80 bg-slate-50/75 p-2">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                    activeTab === tab.id
-                      ? 'bg-slate-900 text-white shadow'
-                      : 'text-slate-600 hover:bg-white hover:text-slate-900'
-                  }`}
-                >
-                  <span className="mr-2 text-xs">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
+            <div className="mb-4 sm:mb-5 overflow-x-auto -mx-1 px-1 scrollbar-hide">
+              <div className="flex gap-1.5 sm:gap-2 sm:flex-wrap rounded-xl border border-slate-200/80 bg-slate-50/75 p-1.5 sm:p-2 w-max sm:w-auto">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap active:scale-95 ${
+                      activeTab === tab.id
+                        ? 'bg-slate-900 text-white shadow'
+                        : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="mr-1 sm:mr-2 text-[10px] sm:text-xs">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>
@@ -191,8 +192,8 @@ function AppContent() {
               )}
 
               {activeTab === 'new' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-slate-900">Registrar venta rápida</h3>
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
+                  <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-slate-900">Registrar venta rápida</h3>
                   <SimpleSaleForm
                     clients={availableClients as any}
                     onSaleCreated={async () => {
@@ -204,47 +205,47 @@ function AppContent() {
               )}
 
               {activeTab === 'list' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-slate-900">Seguimiento de ventas</h3>
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
+                  <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-slate-900">Seguimiento de ventas</h3>
                   <SimpleSalesList sales={availableSales as any} onUpdated={refetchSales} />
                 </div>
               )}
 
               {activeTab === 'clients' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
                   <SimpleClientManager sales={availableSales as any} />
                 </div>
               )}
 
               {activeTab === 'logistics' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-slate-900">Logística y entregas</h3>
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
+                  <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-slate-900">Logística y entregas</h3>
                   <LogisticsPanel sales={availableSales as any} onUpdated={refetchSales} />
                 </div>
               )}
 
               {activeTab === 'billing' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-slate-900">Cobranza y facturación</h3>
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
+                  <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-slate-900">Cobranza y facturación</h3>
                   <BillingReport sales={availableSales as any} clients={availableClients as any} />
                 </div>
               )}
 
               {activeTab === 'reminders' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
                   <RemindersPanel />
                 </div>
               )}
 
               {activeTab === 'products' && (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
                   <ProductsManager />
                 </div>
               )}
             </div>
           </div>
 
-          <aside className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.5)] backdrop-blur-md sm:p-6">
+          <aside className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.5)] backdrop-blur-md sm:p-6 min-w-0 overflow-hidden">
             <h2 className="text-xl font-semibold text-slate-900">Vista del día</h2>
             <p className="mt-1 text-sm text-slate-500 capitalize">
               {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -336,20 +337,22 @@ function AppContent() {
           </aside>
         </section>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/80 bg-white/90 p-3 backdrop-blur md:hidden">
-          <div className="mx-auto grid max-w-md grid-cols-5 gap-2">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-lg px-2 py-2 text-xs font-semibold ${
-                  activeTab === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                <span className="mb-1 block text-[10px]">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/80 bg-white/90 backdrop-blur-xl md:hidden safe-area-bottom">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 px-2 py-2 w-max">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col items-center rounded-lg px-2.5 py-1.5 text-[10px] font-semibold transition active:scale-95 shrink-0 ${
+                    activeTab === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <span className="text-sm leading-none mb-0.5">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </main>

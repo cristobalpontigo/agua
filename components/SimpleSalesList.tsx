@@ -101,24 +101,24 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Búsqueda</label>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
+        <div className="col-span-2 sm:col-span-1">
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1">Búsqueda</label>
           <input
             type="text"
             placeholder="Buscar cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
+            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Estado</label>
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1">Estado</label>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 focus:outline-none"
+            className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
           >
             <option value="todas">Todas ({stats.total})</option>
             <option value="completadas">Completadas ({stats.completed})</option>
@@ -127,29 +127,29 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-900 mb-2">Total</label>
-          <div className="px-4 py-2 bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-900 font-bold">
+          <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-1">Total</label>
+          <div className="px-3 py-2.5 bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-900 font-bold text-sm">
             {formatCurrency(stats.amount)}
           </div>
         </div>
       </div>
 
       {/* Filtro por fecha */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
         {(['hoy', 'semana', 'mes', 'todas'] as const).map(f => (
           <button
             key={f}
             onClick={() => setDateFilter(f)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${
+            className={`px-3 py-2 text-xs font-semibold rounded-full border transition whitespace-nowrap ${
               dateFilter === f
                 ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
+                : 'bg-white text-slate-600 border-slate-300 active:bg-slate-100'
             }`}
           >
-            {f === 'hoy' ? 'Hoy' : f === 'semana' ? 'Últimos 7 días' : f === 'mes' ? 'Este mes' : 'Todas'}
+            {f === 'hoy' ? 'Hoy' : f === 'semana' ? '7 días' : f === 'mes' ? 'Mes' : 'Todas'}
           </button>
         ))}
-        <span className="ml-auto text-xs text-slate-500 self-center">{filteredSales.length} resultado(s)</span>
+        <span className="ml-auto text-xs text-slate-500 self-center whitespace-nowrap">{filteredSales.length} result.</span>
       </div>
 
       {/* Lista */}
@@ -204,7 +204,7 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
                       setPayingId(payingId === sale.id ? null : sale.id);
                       setPayingAmount(SaleService.calculateTotal((sale as any).items));
                     }}
-                    className="px-3 py-1.5 text-xs font-semibold rounded bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                    className="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-600 text-white active:bg-emerald-700 transition"
                   >
                     💰 Cobrar
                   </button>
@@ -213,7 +213,7 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
                   <button
                     onClick={() => saveSaleChanges(sale.id, 'pending')}
                     disabled={savingId === sale.id}
-                    className="px-2 py-1 text-xs rounded bg-amber-100 text-amber-800 border border-amber-200"
+                    className="px-3 py-2 text-xs rounded-lg bg-amber-100 text-amber-800 border border-amber-200 active:bg-amber-200"
                   >
                     Reabrir
                   </button>
@@ -223,7 +223,7 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
                     setEditingSaleId(editingSaleId === sale.id ? null : sale.id);
                     setNoteDraft(sale.notes || '');
                   }}
-                  className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 border border-blue-200"
+                  className="px-3 py-2 text-xs rounded-lg bg-blue-100 text-blue-800 border border-blue-200 active:bg-blue-200"
                 >
                   Nota
                 </button>
@@ -232,18 +232,18 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
               {payingId === sale.id && (
                 <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
                   <p className="text-xs font-semibold text-emerald-800">Registrar cobro</p>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
                       value={payingAmount}
                       onChange={(e) => setPayingAmount(Number(e.target.value))}
-                      className="flex-1 px-2 py-1.5 text-sm border border-emerald-300 rounded bg-white"
+                      className="w-full px-3 py-2.5 text-sm border border-emerald-300 rounded-lg bg-white"
                       placeholder="Monto"
                     />
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
-                      className="px-2 py-1.5 text-xs border border-emerald-300 rounded bg-white"
+                      className="w-full px-3 py-2.5 text-xs border border-emerald-300 rounded-lg bg-white"
                     >
                       <option value="efectivo">Efectivo</option>
                       <option value="transferencia">Transferencia</option>
@@ -251,17 +251,17 @@ export function SimpleSalesList({ sales, onUpdated }: SimpleSalesListProps) {
                       <option value="tarjeta">Tarjeta</option>
                     </select>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
                     <button
                       onClick={() => handleCobrar(sale)}
                       disabled={processingPayment}
-                      className="flex-1 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-60 transition"
+                      className="w-full px-3 py-2.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg active:bg-emerald-700 disabled:opacity-60 transition"
                     >
                       {processingPayment ? 'Registrando...' : '✓ Confirmar cobro'}
                     </button>
                     <button
                       onClick={() => setPayingId(null)}
-                      className="px-3 py-1.5 text-xs text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                      className="px-4 py-2.5 text-xs text-slate-600 bg-white border border-slate-300 rounded-lg active:bg-slate-50"
                     >
                       Cancelar
                     </button>

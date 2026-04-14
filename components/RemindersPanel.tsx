@@ -395,10 +395,10 @@ export function RemindersPanel() {
                   {/* Checkbox */}
                   <button
                     onClick={() => toggleComplete(r)}
-                    className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition ${
+                    className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 transition ${
                       r.completed
                         ? 'border-emerald-400 bg-emerald-400 text-white'
-                        : 'border-slate-300 hover:border-cyan-400'
+                        : 'border-slate-300 active:border-cyan-400'
                     }`}
                   >
                     {r.completed && <span className="text-xs">✓</span>}
@@ -428,12 +428,12 @@ export function RemindersPanel() {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  {/* Actions — always visible for touch */}
+                  <div className="flex gap-1">
                     {!r.completed && (
                       <button
                         onClick={() => startEdit(r)}
-                        className="rounded-lg p-1.5 text-xs text-slate-500 hover:bg-slate-100"
+                        className="rounded-lg p-2 text-sm text-slate-500 active:bg-slate-100 bg-slate-50"
                         title="Editar"
                       >
                         ✏️
@@ -441,7 +441,7 @@ export function RemindersPanel() {
                     )}
                     <button
                       onClick={() => deleteReminder(r.id)}
-                      className="rounded-lg p-1.5 text-xs text-rose-500 hover:bg-rose-50"
+                      className="rounded-lg p-2 text-sm text-rose-500 active:bg-rose-50 bg-slate-50"
                       title="Eliminar"
                     >
                       🗑️

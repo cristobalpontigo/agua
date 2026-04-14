@@ -245,39 +245,32 @@ export function ProductsManager() {
           {products.map((p) => (
             <div
               key={p.id}
-              className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300"
+              className="rounded-xl border border-slate-200 bg-white p-3 transition active:border-slate-300"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-slate-900">{p.name}</p>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-mono text-slate-500">
-                    {p.code}
-                  </span>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-base font-bold text-emerald-600">{formatCurrency(p.price)}</span>
+                    <span className="text-[10px] text-slate-400">/ {p.unit}</span>
+                  </div>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-3">
-                  <span className="text-lg font-bold text-emerald-600">{formatCurrency(p.price)}</span>
-                  <span className="text-xs text-slate-400">por {p.unit}</span>
-                  {p.description && (
-                    <span className="text-xs text-slate-400">— {p.description}</span>
-                  )}
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={() => startEdit(p)}
+                    className="rounded-lg p-2 text-xs text-slate-500 active:bg-slate-100 bg-slate-50"
+                    title="Editar"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => deleteProduct(p.id)}
+                    className="rounded-lg p-2 text-xs text-rose-500 active:bg-rose-50 bg-slate-50"
+                    title="Desactivar"
+                  >
+                    🗑️
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                <button
-                  onClick={() => startEdit(p)}
-                  className="rounded-lg p-2 text-xs text-slate-500 hover:bg-slate-100"
-                  title="Editar"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => deleteProduct(p.id)}
-                  className="rounded-lg p-2 text-xs text-rose-500 hover:bg-rose-50"
-                  title="Desactivar"
-                >
-                  🗑️
-                </button>
               </div>
             </div>
           ))}

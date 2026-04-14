@@ -18,9 +18,11 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.2), transparent 30%),
     radial-gradient(circle at 85% 20%, rgba(251, 191, 36, 0.18), transparent 32%),
@@ -92,4 +94,26 @@ button:active {
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide scrollbar for horizontal scroll areas on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for bottom nav on notched phones */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent text selection on touch UI elements */
+@media (max-width: 640px) {
+  button, select {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 }
