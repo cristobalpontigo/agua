@@ -131,7 +131,7 @@ function AppContent() {
         <div className="mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 truncate">AGUAS Gestión</h1>
+              <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 truncate">Aguas Continental</h1>
               <p className="text-xs text-slate-500 truncate">{monthLabel}</p>
             </div>
 

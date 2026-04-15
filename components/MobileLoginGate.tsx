@@ -152,8 +152,8 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-600 shadow-lg shadow-cyan-200">
               <span className="text-2xl font-bold text-white">A</span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">AGUAS</h1>
-            <p className="mt-1 text-sm text-slate-500">Gestión de ventas de agua</p>
+            <h1 className="text-2xl font-bold text-slate-900">Aguas Continental</h1>
+            <p className="mt-1 text-sm text-slate-500">Aguas Purificadas Continental Spa</p>
           </div>
 
           <div className="rounded-2xl border border-white/80 bg-white p-6 shadow-xl shadow-slate-200/50">
@@ -194,7 +194,7 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
           </div>
 
           <p className="mt-5 text-center text-xs text-slate-400">
-            AGUAS Gestión PYME &mdash; v1.0
+            Aguas Continental &mdash; v1.3
           </p>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
 
       {showInstallPrompt && deferredPrompt && (
         <div className="fixed inset-x-3 bottom-24 z-50 rounded-2xl border border-cyan-200 bg-white p-4 shadow-lg md:inset-x-auto md:right-4 md:w-[360px] md:bottom-4">
-          <p className="text-sm font-semibold text-slate-900">Instalar AGUAS app</p>
+          <p className="text-sm font-semibold text-slate-900">Instalar Aguas Continental</p>
           <p className="mt-1 text-xs text-slate-600">Agrégrala a tu pantalla de inicio para abrirla como aplicación móvil.</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button

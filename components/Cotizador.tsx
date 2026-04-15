@@ -158,8 +158,11 @@ export function Cotizador() {
 <body>
   <div class="header">
     <div>
-      <div class="logo">AGUAS</div>
-      <div class="logo-sub">Gestión de ventas de agua</div>
+      <div class="logo">Aguas Continental</div>
+      <div class="logo-sub">Aguas Purificadas Continental Spa · RUT 76.499.612-7</div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px;">Producción de aguas minerales y otras aguas embotelladas</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px;">Los Pitios 5778-L, Macul · El Maqui 112, San José de Maipo</div>
+      <div style="font-size:11px;color:#64748b;">Tel: +56 9 9432 8669 · Juan Carlos Ramírez</div>
     </div>
     <div class="quote-info">
       <div class="quote-number">Cotización N° ${String(quoteNumber).padStart(4, '0')}</div>
@@ -210,7 +213,7 @@ export function Cotizador() {
   ${quote.notes ? `<div class="section" style="margin-top:20px"><div class="section-title">Observaciones</div><div class="notes">${quote.notes}</div></div>` : ''}
 
   <div class="footer">
-    AGUAS · Cotización generada el ${formatDate(today)} · Documento no tributario
+    Aguas Purificadas Continental Spa · Cotización generada el ${formatDate(today)} · Documento no tributario
   </div>
 </body>
 </html>`;

@@ -23,14 +23,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Aguas | Gestión PYME",
+  title: "Aguas Continental | Gestión PYME",
   description: "Panel simple y visual para organizar ventas, clientes y cobranza.",
   manifest: '/manifest.webmanifest',
-  applicationName: 'AGUAS',
+  applicationName: 'Aguas Continental',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'AGUAS',
+    title: 'Aguas Continental',
   },
   formatDetection: {
     telephone: true,

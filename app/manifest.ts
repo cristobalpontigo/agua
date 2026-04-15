@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'AGUAS Gestion PYME',
-    short_name: 'AGUAS',
+    name: 'Aguas Continental',
+    short_name: 'Continental',
     description: 'Panel movil para ventas, clientes y logistica de agua.',
     start_url: '/',
     display: 'standalone',
