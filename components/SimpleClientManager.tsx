@@ -20,9 +20,10 @@ type RecurringOrderConfig = {
 
 interface SimpleClientManagerProps {
   sales?: any[];
+  onUpdated?: () => void;
 }
 
-export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
+export function SimpleClientManager({ sales = [], onUpdated }: SimpleClientManagerProps) {
   const { data, loading, error, refetch } = useClients();
   const clients = (data as any[]) || [];
   const [showForm, setShowForm] = useState(false);
@@ -157,6 +158,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
         throw new Error(body.error || 'No se pudo desactivar el cliente');
       }
       await refetch();
+      onUpdated?.();
       setSubmitSuccess('Cliente desactivado correctamente.');
     } catch (err: any) {
       setSubmitError(err.message || 'Error al desactivar cliente');
@@ -217,6 +219,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
 
       if (res.ok) {
         await refetch();
+        onUpdated?.();
         setFormData({
           name: '',
           contactName: '',
@@ -226,6 +229,7 @@ export function SimpleClientManager({ sales = [] }: SimpleClientManagerProps) {
           sector: 'la_obra',
           billingDay: 10,
         });
+        onUpdated?.();
         setSubmitSuccess('Cliente creado correctamente.');
         setShowForm(false);
       } else {

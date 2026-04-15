@@ -22,7 +22,7 @@ type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders
 
 function AppContent() {
   const { sales, clients, payments, loading } = useAppContext();
-  const { data: apiClientsData, error: clientsError } = useClients();
+  const { data: apiClientsData, error: clientsError, refetch: refetchClients } = useClients();
   const { data: apiSalesData, error: salesError, refetch: refetchSales } = useSales();
   const [activeTab, setActiveTab] = useState<TabType>('new');
 
@@ -226,7 +226,7 @@ function AppContent() {
 
               {activeTab === 'clients' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
-                  <SimpleClientManager sales={availableSales as any} />
+                  <SimpleClientManager sales={availableSales as any} onUpdated={refetchClients} />
                 </div>
               )}
 
