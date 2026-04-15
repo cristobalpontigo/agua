@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         amount,
         method,
         note: note || null,
-        status: 'pending',
+        status: 'completed',
       },
       include: {
         client: true,

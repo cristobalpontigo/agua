@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppProvider } from '@/context/AppContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { useAppContext } from '@/context/AppContext';
@@ -14,10 +14,11 @@ import { MobileLoginGate } from '@/components/MobileLoginGate';
 import { RemindersPanel } from '@/components/RemindersPanel';
 import { ProductsManager } from '@/components/ProductsManager';
 import { DangerZone } from '@/components/DangerZone';
+import { Cotizador } from '@/components/Cotizador';
 import { useClients, useSales } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
 
-type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders' | 'products';
+type TabType = 'new' | 'list' | 'clients' | 'billing' | 'logistics' | 'reminders' | 'products' | 'quotes';
 
 function AppContent() {
   const { sales, clients, payments, loading } = useAppContext();
@@ -46,8 +47,19 @@ function AppContent() {
   const availableSales = hasApiSalesData ? normalizedApiSales : sales;
 
   const totalAmount = availableSales.reduce((sum, s) => sum + SaleService.calculateTotal(s.items), 0);
-  const totalPaid = payments
-    .filter(p => p.status === 'completado')
+  // Fetch payments from API
+  const [apiPayments, setApiPayments] = useState<any[]>([]);
+  const fetchPayments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/payments', { cache: 'no-store' });
+      if (res.ok) setApiPayments(await res.json());
+    } catch {}
+  }, []);
+  useEffect(() => { fetchPayments(); }, [fetchPayments]);
+
+  const allPayments = apiPayments.length > 0 ? apiPayments : payments;
+  const totalPaid = allPayments
+    .filter(p => p.status === 'completed' || p.status === 'completado')
     .reduce((sum, p) => sum + p.amount, 0);
   const pendingAmount = Math.max(0, totalAmount - totalPaid);
   const pendingSales = availableSales.filter(sale => sale.status === 'pendiente').length;
@@ -73,6 +85,7 @@ function AppContent() {
     { id: 'billing', label: 'Facturación', icon: '¤' },
     { id: 'reminders', label: 'Recordatorios', icon: '🔔' },
     { id: 'products', label: 'Productos', icon: '📦' },
+    { id: 'quotes', label: 'Cotizar', icon: '📄' },
   ];
 
   const metrics = [
@@ -86,7 +99,7 @@ function AppContent() {
     {
       label: 'Cobrado',
       value: formatCurrency(totalPaid),
-      helper: `${payments.filter(p => p.status === 'completado').length} pagos`,
+      helper: `${allPayments.filter(p => p.status === 'completed' || p.status === 'completado').length} pagos`,
       accent: 'from-emerald-500/20 to-emerald-200/0',
       border: 'border-emerald-300/40',
     },
@@ -207,7 +220,7 @@ function AppContent() {
               {activeTab === 'list' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
                   <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-slate-900">Seguimiento de ventas</h3>
-                  <SimpleSalesList sales={availableSales as any} onUpdated={refetchSales} />
+                  <SimpleSalesList sales={availableSales as any} onUpdated={async () => { await refetchSales(); await fetchPayments(); }} />
                 </div>
               )}
 
@@ -240,6 +253,12 @@ function AppContent() {
               {activeTab === 'products' && (
                 <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
                   <ProductsManager />
+                </div>
+              )}
+
+              {activeTab === 'quotes' && (
+                <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-6">
+                  <Cotizador />
                 </div>
               )}
             </div>

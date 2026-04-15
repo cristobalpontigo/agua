@@ -64,25 +64,28 @@ export function RemindersPanel() {
     }
   }, []);
 
+  // Track which reminders we've already shown a notification for this session
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
+
   // Notification checker — runs every 30 seconds
   useEffect(() => {
     const checkAndNotify = () => {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
       const now = new Date();
       reminders.forEach(async (r) => {
         if (r.completed || r.notified) return;
+        if (notifiedIdsRef.current.has(r.id)) return;
         const due = new Date(r.dueDate);
         const diffMs = due.getTime() - now.getTime();
-        // Notify if due within the next 2 minutes or already past
-        if (diffMs <= 120_000) {
-          if ('Notification' in window && Notification.permission === 'granted') {
-            const prLabel = PRIORITY_CONFIG[r.priority]?.label || '';
-            new Notification(`⏰ Recordatorio: ${r.title}`, {
-              body: r.description || `Prioridad: ${prLabel}`,
-              icon: '/icon',
-              tag: r.id,
-            });
-          }
-          // Mark as notified
+        // Only notify if due within the next 2 minutes or overdue by at most 10 minutes
+        if (diffMs <= 120_000 && diffMs > -600_000) {
+          notifiedIdsRef.current.add(r.id);
+          new Notification(`⏰ Recordatorio: ${r.title}`, {
+            body: r.description || `Prioridad: ${PRIORITY_CONFIG[r.priority]?.label || ''}`,
+            icon: '/icon',
+            tag: r.id,
+          });
+          // Mark as notified in DB
           try {
             await fetch(`/api/reminders/${r.id}`, {
               method: 'PUT',
@@ -98,7 +101,7 @@ export function RemindersPanel() {
     };
 
     notifCheckRef.current = setInterval(checkAndNotify, 30_000);
-    checkAndNotify(); // run immediately
+    checkAndNotify();
 
     return () => {
       if (notifCheckRef.current) clearInterval(notifCheckRef.current);
