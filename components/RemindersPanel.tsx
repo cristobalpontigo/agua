@@ -77,8 +77,10 @@ export function RemindersPanel() {
         if (notifiedIdsRef.current.has(r.id)) return;
         const due = new Date(r.dueDate);
         const diffMs = due.getTime() - now.getTime();
-        // Only notify if due within the next 2 minutes or overdue by at most 10 minutes
-        if (diffMs <= 120_000 && diffMs > -600_000) {
+        // Only notify if the due time has passed (overdue) but by at most 10 minutes
+        // diffMs <= 0 means due time has arrived or passed
+        // diffMs > -600_000 means not overdue by more than 10 minutes
+        if (diffMs <= 0 && diffMs > -600_000) {
           notifiedIdsRef.current.add(r.id);
           new Notification(`⏰ Recordatorio: ${r.title}`, {
             body: r.description || `Prioridad: ${PRIORITY_CONFIG[r.priority]?.label || ''}`,
