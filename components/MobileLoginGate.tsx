@@ -27,6 +27,8 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
   const [pin, setPin] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [pendingSync, setPendingSync] = useState(0);
 
   const [user, setUser] = useState<AuthUser | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -48,7 +50,50 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+      // Listen for offline queue messages from SW
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'QUEUE_MUTATION') {
+          const queue = JSON.parse(localStorage.getItem('agua.offlineQueue') || '[]');
+          queue.push(event.data.data);
+          localStorage.setItem('agua.offlineQueue', JSON.stringify(queue));
+        }
+        if (event.data?.type === 'SYNC_RESULTS') {
+          const results = event.data.results || [];
+          const synced = results.filter((r: any) => r.ok).map((r: any) => r.id);
+          if (synced.length > 0) {
+            const queue = JSON.parse(localStorage.getItem('agua.offlineQueue') || '[]');
+            const remaining = queue.filter((q: any) => !synced.includes(q.id));
+            localStorage.setItem('agua.offlineQueue', JSON.stringify(remaining));
+            window.location.reload();
+          }
+        }
+      });
+
+      // When back online, sync queued mutations
+      const syncOffline = () => {
+        const queue = JSON.parse(localStorage.getItem('agua.offlineQueue') || '[]');
+        if (queue.length > 0 && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'SYNC_QUEUE', queue });
+        }
+      };
+      window.addEventListener('online', syncOffline);
+      syncOffline();
     }
+
+    // Offline/online status
+    setIsOffline(!navigator.onLine);
+    const goOffline = () => { setIsOffline(true); updatePendingCount(); };
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+
+    const updatePendingCount = () => {
+      const q = JSON.parse(localStorage.getItem('agua.offlineQueue') || '[]');
+      setPendingSync(q.length);
+    };
+    updatePendingCount();
+    const pendingInterval = setInterval(updatePendingCount, 5000);
 
     const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY) === '1';
 
@@ -71,6 +116,9 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+      clearInterval(pendingInterval);
     };
   }, []);
 
@@ -236,6 +284,18 @@ export function MobileLoginGate({ children }: MobileLoginGateProps) {
       )}
 
       {children}
+
+      {/* Offline indicator */}
+      {(isOffline || pendingSync > 0) && (
+        <div className={`fixed top-0 inset-x-0 z-[100] text-center text-xs font-semibold py-1.5 ${
+          isOffline ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white'
+        }`}>
+          {isOffline
+            ? '📡 Sin conexión — los cambios se guardarán localmente'
+            : `⏳ Sincronizando ${pendingSync} cambio(s) pendiente(s)...`
+          }
+        </div>
+      )}
     </>
   );
 }

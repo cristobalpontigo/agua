@@ -39,6 +39,9 @@ export function SimpleClientManager({ sales = [], onUpdated }: SimpleClientManag
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [recurringOrders, setRecurringOrders] = useState<Record<string, RecurringOrderConfig>>({});
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
+  const [historyClientId, setHistoryClientId] = useState<string | null>(null);
+  const [clientSales, setClientSales] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     fetch('/api/products', { cache: 'no-store' })
@@ -185,6 +188,25 @@ export function SimpleClientManager({ sales = [], onUpdated }: SimpleClientManag
       : `Hola ${name}, te escribimos de AGUAS. Quedamos al d\u00eda con los pagos. \u00a1Gracias por tu preferencia!`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
   };
+
+  const toggleHistory = async (clientId: string) => {
+    if (historyClientId === clientId) {
+      setHistoryClientId(null);
+      setClientSales([]);
+      return;
+    }
+    setHistoryClientId(clientId);
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`/api/sales?clientId=${clientId}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setClientSales(data);
+      }
+    } catch { /* ignore */ }
+    setLoadingHistory(false);
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     contactName: '',
@@ -499,6 +521,70 @@ export function SimpleClientManager({ sales = [], onUpdated }: SimpleClientManag
                       </div>
                     );
                   })()}
+
+                  {/* Historial button */}
+                  <button
+                    onClick={() => toggleHistory(client.id)}
+                    className={`w-full mt-2 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${
+                      historyClientId === client.id
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    {historyClientId === client.id ? '▾ Ocultar historial' : '▸ Ver historial'}
+                  </button>
+
+                  {/* History panel */}
+                  {historyClientId === client.id && (
+                    <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3 max-h-64 overflow-y-auto">
+                      {loadingHistory ? (
+                        <p className="text-xs text-slate-500 text-center py-2">Cargando...</p>
+                      ) : clientSales.length === 0 ? (
+                        <p className="text-xs text-slate-500 text-center py-2">Sin ventas registradas</p>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{clientSales.length} venta(s)</p>
+                          {clientSales.map((sale: any) => {
+                            const items = sale.saleItems || sale.items || [];
+                            const total = items.reduce((s: number, i: any) => s + (i.subtotal || i.price * i.quantity || 0), 0);
+                            const statusMap: Record<string, { label: string; cls: string }> = {
+                              pending: { label: 'Pendiente', cls: 'bg-amber-100 text-amber-700' },
+                              pendiente: { label: 'Pendiente', cls: 'bg-amber-100 text-amber-700' },
+                              completed: { label: 'Cobrada', cls: 'bg-emerald-100 text-emerald-700' },
+                              completada: { label: 'Cobrada', cls: 'bg-emerald-100 text-emerald-700' },
+                              cancelled: { label: 'Cancelada', cls: 'bg-slate-100 text-slate-500' },
+                              cancelada: { label: 'Cancelada', cls: 'bg-slate-100 text-slate-500' },
+                            };
+                            const st = statusMap[sale.status] || { label: sale.status, cls: 'bg-slate-100 text-slate-600' };
+                            return (
+                              <div key={sale.id} className="flex items-center justify-between rounded-md border border-slate-100 px-2.5 py-2">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium text-slate-800 truncate">
+                                    {items.map((i: any) => `${i.quantity}× ${i.productId || 'producto'}`).join(', ')}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500">
+                                    {new Date(sale.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    {sale.notes ? ` · ${sale.notes}` : ''}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0 ml-2">
+                                  <p className="text-xs font-bold text-slate-900">{formatCurrency(total)}</p>
+                                  <span className={`inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded ${st.cls}`}>{st.label}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          <div className="pt-2 border-t border-slate-100 flex justify-between text-xs font-semibold">
+                            <span className="text-slate-500">Total histórico</span>
+                            <span className="text-slate-900">{formatCurrency(clientSales.reduce((s: number, sale: any) => {
+                              const items = sale.saleItems || sale.items || [];
+                              return s + items.reduce((t: number, i: any) => t + (i.subtotal || i.price * i.quantity || 0), 0);
+                            }, 0))}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Pedido recurrente</p>
